@@ -71,7 +71,7 @@ module T = struct
         match
           Option.bind (File_tree.find_dir dir) ~f:File_tree.Dir.dune_file
         with
-        | Some file -> File_tree.Dune_file.path file
+        | Some file -> Source_tree.path file
         | None -> Path.Source.relative dir "_unknown_"
       in
       Loc.in_file (Path.source file)

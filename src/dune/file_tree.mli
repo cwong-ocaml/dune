@@ -3,27 +3,6 @@ open! Stdune
 
 open! Import
 
-module Dune_file : sig
-  val fname : string
-
-  val jbuild_fname : string
-
-  type kind = private
-    | Plain
-    | Ocaml_script
-
-  type t
-
-  (** We release the memory taken by s-exps as soon as it is used, unless
-      [kind = Ocaml_script]. In which case that optimization is incorrect as we
-      need to re-parse in every context. *)
-  val get_static_sexp_and_possibly_destroy : t -> Dune_lang.Ast.t list
-
-  val kind : t -> kind
-
-  val path : t -> Path.Source.t
-end
-
 module Dir : sig
   type t
 
@@ -42,7 +21,7 @@ module Dir : sig
   val fold_dune_files :
        t
     -> init:'acc
-    -> f:(basename:string option -> t -> Dune_file.t -> 'acc -> 'acc)
+    -> f:(basename:string option -> t -> Source_tree.t -> 'acc -> 'acc)
     -> 'acc
 
   val sub_dir_paths : t -> Path.Source.Set.t
@@ -57,7 +36,7 @@ module Dir : sig
     t -> traverse:Sub_dirs.Status.Set.t -> init:'a -> f:(t -> 'a -> 'a) -> 'a
 
   (** Return the contents of the dune (or jbuild) file in this directory *)
-  val dune_file : t -> Dune_file.t option
+  val dune_file : t -> Source_tree.t option
 
   (** Return the project this directory is part of *)
   val project : t -> Dune_project.t

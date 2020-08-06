@@ -29,85 +29,6 @@ module File = struct
   let of_source_path p = of_stats (Path.stat (Path.source p))
 end
 
-module Dune_file = struct
-  module Plain = struct
-    type t =
-      { mutable contents : Sub_dirs.Dir_map.per_dir
-      ; for_subdirs : Sub_dirs.Dir_map.t
-      }
-
-    (** It's also possible to add GC for:
-
-        - [contents.subdir_status]
-        - [consumed nodes of for_subdirs]
-
-        We don't do this for now because the benefits are likely small.*)
-
-    let get_sexp_and_destroy t =
-      let result = t.contents.sexps in
-      t.contents <- { t.contents with sexps = [] };
-      result
-  end
-
-  let fname = "dune"
-
-  let jbuild_fname = "jbuild"
-
-  type kind =
-    | Plain
-    | Ocaml_script
-
-  type t =
-    { path : Path.Source.t
-    ; kind : kind
-    ; (* for [kind = Ocaml_script], this is the part inserted with subdir *)
-      plain : Plain.t
-    }
-
-  let get_static_sexp_and_possibly_destroy t =
-    match t.kind with
-    | Ocaml_script -> t.plain.contents.sexps
-    | Plain -> Plain.get_sexp_and_destroy t.plain
-
-  let kind t = t.kind
-
-  let path t = t.path
-
-  let sub_dirs (t : t option) =
-    match t with
-    | None -> Sub_dirs.default
-    | Some t -> Sub_dirs.or_default t.plain.contents.subdir_status
-
-  let load_plain sexps ~from_parent ~project =
-    let decoder = Dune_project.set_parsing_context project Sub_dirs.decode in
-    let active =
-      let parsed =
-        Dune_lang.Decoder.parse decoder Univ_map.empty
-          (Dune_lang.Ast.List (Loc.none, sexps))
-      in
-      match from_parent with
-      | None -> parsed
-      | Some from_parent -> Sub_dirs.Dir_map.merge parsed from_parent
-    in
-    let contents = Sub_dirs.Dir_map.root active in
-    { Plain.contents; for_subdirs = active }
-
-  let load file ~file_exists ~from_parent ~project =
-    let kind, plain =
-      match file_exists with
-      | false -> (Plain, load_plain [] ~from_parent ~project)
-      | true ->
-        Io.with_lexbuf_from_file (Path.source file) ~f:(fun lb ->
-            if Dune_lexer.is_script lb then
-              let from_parent = load_plain [] ~from_parent ~project in
-              (Ocaml_script, from_parent)
-            else
-              let sexps = Dune_lang.Parser.parse lb ~mode:Many in
-              (Plain, load_plain sexps ~from_parent ~project))
-    in
-    { path = file; kind; plain }
-end
-
 module Readdir : sig
   type t = private
     { files : String.Set.t
@@ -149,7 +70,7 @@ end = struct
             (Path.Source.to_string_maybe_quoted
                (Path.Source.relative
                   (Path.Source.parent_exn path)
-                  Dune_file.fname))
+                  Source_tree.fname))
         ; Pp.textf "Reason: %s" (Unix.error_message unix_error)
         ];
       Error unix_error
@@ -261,7 +182,7 @@ module Dir0 = struct
   and contents =
     { files : String.Set.t
     ; sub_dirs : sub_dir String.Map.t
-    ; dune_file : Dune_file.t option
+    ; dune_file : Source_tree.t option
     }
 
   and sub_dir =
@@ -399,7 +320,8 @@ end = struct
       -> dirs:(string * Path.Source.t * File.t) list
       -> sub_dirs:Predicate_lang.Glob.t Sub_dirs.Status.Map.t
       -> parent_status:Sub_dirs.Status.t
-      -> dune_file:Dune_file.t option (** to interpret [(subdir ..)] stanzas *)
+      -> dune_file:Source_tree.t option
+           (** to interpret [(subdir ..)] stanzas *)
       -> path:Path.Source.t
       -> Dirs_visited.Per_fn.t * Dir0.sub_dir String.Map.t
   end = struct
@@ -438,9 +360,9 @@ end = struct
     let virtual_ ~sub_dirs ~parent_status ~dune_file ~init ~path =
       match dune_file with
       | None -> init
-      | Some (df : Dune_file.t) ->
+      | Some (df : Source_tree.t) ->
         (* Virtual directories are not in [Readdir.t]. Their presence is only *)
-        let dirs = Sub_dirs.Dir_map.sub_dirs df.plain.for_subdirs in
+        let dirs = Sub_dirs.Dir_map.sub_dirs (Source_tree.for_subdirs df) in
         let status_map = Sub_dirs.eval sub_dirs ~dirs in
         List.fold_left dirs ~init ~f:(fun acc fn ->
             let path = Path.Source.relative path fn in
@@ -468,12 +390,13 @@ end = struct
         false
       else if
         (not recognize_jbuilder_projects)
-        && String.Set.mem files Dune_file.jbuild_fname
+        && String.Set.mem files Source_tree.jbuild_fname
       then
         User_error.raise
           ~loc:
             (Loc.in_file
-               (Path.source (Path.Source.relative path Dune_file.jbuild_fname)))
+               (Path.source
+                  (Path.Source.relative path Source_tree.jbuild_fname)))
           [ Pp.text
               "jbuild files are no longer supported, please convert this file \
                to a dune file instead."
@@ -482,7 +405,7 @@ end = struct
                dune."
           ]
       else
-        String.Set.mem files Dune_file.fname
+        String.Set.mem files Source_tree.fname
     in
     let from_parent =
       let open Option.O in
@@ -490,7 +413,7 @@ end = struct
       let* parent = find_dir parent in
       let* dune_file = parent.contents.dune_file in
       let dir_basename = Path.Source.basename path in
-      Sub_dirs.Dir_map.descend dune_file.plain.for_subdirs dir_basename
+      Sub_dirs.Dir_map.descend (Source_tree.for_subdirs dune_file) dir_basename
     in
     let dune_file_absent = (not file_exists) && Option.is_none from_parent in
     if dune_file_absent then
@@ -499,8 +422,8 @@ end = struct
       ignore
         ( Dune_project.ensure_project_file_exists project
           : Dune_project.created_or_already_exist );
-      let file = Path.Source.relative path Dune_file.fname in
-      Some (Dune_file.load file ~file_exists ~project ~from_parent)
+      let file = Path.Source.relative path Source_tree.fname in
+      Some (Source_tree.load file ~file_exists ~project ~from_parent)
     )
 
   let contents { Readdir.dirs; files } ~dirs_visited ~project ~path
@@ -512,7 +435,7 @@ end = struct
     let dune_file =
       dune_file ~dir_status ~recognize_jbuilder_projects ~files ~project ~path
     in
-    let sub_dirs = Dune_file.sub_dirs dune_file in
+    let sub_dirs = Source_tree.sub_dirs dune_file in
     let dirs_visited, sub_dirs =
       Get_subdir.all ~dirs_visited ~dirs ~sub_dirs ~parent_status:dir_status
         ~dune_file ~path

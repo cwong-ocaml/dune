@@ -213,12 +213,10 @@ type conf =
   ; vcs : Vcs.t list
   }
 
-let interpret ~dir ~project ~(dune_file : File_tree.Dune_file.t) =
-  let file = File_tree.Dune_file.path dune_file in
-  let static =
-    File_tree.Dune_file.get_static_sexp_and_possibly_destroy dune_file
-  in
-  match File_tree.Dune_file.kind dune_file with
+let interpret ~dir ~project ~(dune_file : Source_tree.t) =
+  let file = Source_tree.path dune_file in
+  let static = Source_tree.get_static_sexp_and_possibly_destroy dune_file in
+  match Source_tree.kind dune_file with
   | Ocaml_script ->
     Dune_files.Script { script = { dir; project; file }; from_parent = static }
   | Plain -> Literal (Dune_file.parse static ~dir ~file ~project)

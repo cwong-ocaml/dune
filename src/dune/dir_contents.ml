@@ -8,7 +8,7 @@ let loc_of_dune_file ft_dir =
   Loc.in_file
     (Path.source
        ( match File_tree.Dir.dune_file ft_dir with
-       | Some d -> File_tree.Dune_file.path d
+       | Some d -> Source_tree.path d
        | None -> Path.Source.relative (File_tree.Dir.path ft_dir) "_unknown_" ))
 
 type t =

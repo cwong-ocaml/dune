@@ -140,7 +140,7 @@ module V1 = struct
   open Common
 
   let rename_basename base =
-    match String.drop_prefix base ~prefix:File_tree.Dune_file.jbuild_fname with
+    match String.drop_prefix base ~prefix:Source_tree.jbuild_fname with
     | None -> base
     | Some suffix -> "dune" ^ suffix
 
@@ -451,11 +451,9 @@ module V1 = struct
       Package.Name.Map.iter (Dune_project.packages project) ~f:(fun pkg ->
           let fn = Package.opam_file pkg in
           if Path.exists (Path.source fn) then upgrade_opam_file todo fn) );
-    if String.Set.mem (File_tree.Dir.files dir) File_tree.Dune_file.jbuild_fname
-    then
+    if String.Set.mem (File_tree.Dir.files dir) Source_tree.jbuild_fname then
       let fn =
-        Path.Source.relative (File_tree.Dir.path dir)
-          File_tree.Dune_file.jbuild_fname
+        Path.Source.relative (File_tree.Dir.path dir) Source_tree.jbuild_fname
       in
       if Io.with_lexbuf_from_file (Path.source fn) ~f:Dune_lexer.is_script then
         User_warning.emit
@@ -570,9 +568,9 @@ module V2 = struct
     todo.to_edit <- (fn, new_file_contents) :: todo.to_edit
 
   let upgrade_dune_files todo dir =
-    if String.Set.mem (File_tree.Dir.files dir) File_tree.Dune_file.fname then
+    if String.Set.mem (File_tree.Dir.files dir) Source_tree.fname then
       let path = File_tree.Dir.path dir in
-      let fn = Path.Source.relative path File_tree.Dune_file.fname in
+      let fn = Path.Source.relative path Source_tree.fname in
       if Io.with_lexbuf_from_file (Path.source fn) ~f:Dune_lexer.is_script then
         User_warning.emit
           ~loc:(Loc.in_file (Path.source fn))
@@ -628,7 +626,7 @@ let fold_on_project_roots ~f ~init =
 let detect_project_version project dir =
   let in_tree = String.Set.mem (File_tree.Dir.files dir) in
   Dune_project.default_dune_language_version := (0, 1);
-  if in_tree File_tree.Dune_file.jbuild_fname then
+  if in_tree Source_tree.jbuild_fname then
     Jbuild_project
   else
     let project_dune_version = Dune_project.dune_version project in
@@ -637,7 +635,7 @@ let detect_project_version project dir =
       Dune2_project
     else if project_dune_version >= (1, 0) then
       Dune1_project
-    else if in_tree File_tree.Dune_file.fname then
+    else if in_tree Source_tree.fname then
       Dune1_project
     else
       Jbuild_project
