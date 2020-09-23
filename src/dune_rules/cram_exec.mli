@@ -3,4 +3,4 @@ open Stdune
 
 val run : env:Env.t -> script:Path.t -> unit Fiber.t
 
-val linkme : unit
+val make_action : script:Path.t -> Action.t

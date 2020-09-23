@@ -415,6 +415,26 @@ let run ~env ~script lexbuf : string Fiber.t =
 let run ~env ~script =
   run_expect_test script ~f:(fun lexbuf -> run ~env ~script lexbuf)
 
-let () = Fdecl.set Action_exec.cram_run run
+let make_action ~script =
+  Action.Extension
+    { name = "cram"
+    ; version = 0
+    ; deps = [ script ]
+    ; targets = []
+    ; (* probably should add another variant *)
+      how_to_cache = Distribute
+    ; encode =
+        (fun () ->
+          let open Dune_lang in
+          List [ atom "cram"; Dpath.encode script ])
+    ; simplified =
+        (fun () ->
+          Action_to_sh.echo (sprintf "cram %s" (Path.to_string script)))
+    ; action =
+        (fun ~ectx:_ ~eenv ->
+          let open Fiber.O in
+          let+ () = run ~env:eenv.env ~script in
+          ())
+    }
 
-let linkme = ()
+let () = Fdecl.set Action_exec.cram_run run
