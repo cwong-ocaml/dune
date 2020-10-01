@@ -1,5 +1,6 @@
 (** Dune sub-systems *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 (** This module allows to define sub-systems. The aim is to define everything
     related to the sub-system, such as the parser for [dune] files, the metadata

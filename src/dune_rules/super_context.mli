@@ -1,5 +1,6 @@
 (** An augmented context *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 (** A context augmented with: a lib-db, ... Super context are used for
     generating rules. *)

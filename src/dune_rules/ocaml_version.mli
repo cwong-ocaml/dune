@@ -1,5 +1,6 @@
 (** Version numbers for ocamlc and ocamlopt *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 type t
 

@@ -1,5 +1,6 @@
 (** Representation of the object directory for libraries *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 (** Dune store the artifacts of a library or a set of executables in a dedicated
     dot directory (name starting with a '.').

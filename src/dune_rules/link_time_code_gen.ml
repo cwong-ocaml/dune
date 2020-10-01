@@ -1,4 +1,5 @@
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 open Import
 module CC = Compilation_context
 module SC = Super_context

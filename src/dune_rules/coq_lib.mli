@@ -1,4 +1,5 @@
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 (* This file is licensed under The MIT License *)
 (* (c) MINES ParisTech 2018-2019               *)

@@ -1,4 +1,5 @@
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 open! Stdune
 
 (* Compute command line flags for the [include_dirs] field of [Foreign.Stubs.t]

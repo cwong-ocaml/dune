@@ -1,4 +1,5 @@
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 open Import
 
 let mdx_version_required = "1.6.0"

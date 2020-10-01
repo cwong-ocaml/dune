@@ -1,5 +1,6 @@
 (** Track whether dynamic loading of code is supported *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 module By_the_os : sig
   type t

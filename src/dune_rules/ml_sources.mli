@@ -1,5 +1,6 @@
 (** OCaml sources *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 (** This module encapsulates the structure of source files in a particular
     directory. *)

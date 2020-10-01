@@ -1,5 +1,6 @@
 (** Merlin config server *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 (** Once started the server will wait for commands on stdin, read the requested
     merlin dot file and return its content on stdout. The server will halt when

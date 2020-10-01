@@ -1,5 +1,6 @@
 (** Utop rules *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 open! Stdune
 

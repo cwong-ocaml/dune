@@ -1,5 +1,6 @@
 (** Setup of dune *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 (** These parameters are set by [ocaml configure.ml] or copied from
     [setup.defaults.ml]. *)

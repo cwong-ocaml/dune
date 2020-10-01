@@ -1,5 +1,6 @@
 (** Convert an action to a shell command suitable for [/bin/sh] *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 open Stdune
 

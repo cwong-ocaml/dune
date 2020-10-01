@@ -1,4 +1,5 @@
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 open Stdune
 
 (** The type of all kind of sub-system information. This type is what we get

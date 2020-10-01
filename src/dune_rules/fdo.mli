@@ -1,5 +1,6 @@
 (** Integration with feedback-directed optimizations using ocamlfdo. *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 open Stdune
 

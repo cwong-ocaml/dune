@@ -1,6 +1,7 @@
 open! Stdune
 open Dune_file.Plugin
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 let meta_file ~dir { name; libraries = _; site = _, (pkg, site); _ } =
   Path.Build.L.relative dir

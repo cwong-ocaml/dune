@@ -1,5 +1,6 @@
 (** A collection of rules for one or multiple directories. *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 open! Stdune
 

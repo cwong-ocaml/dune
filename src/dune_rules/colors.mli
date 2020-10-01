@@ -1,4 +1,5 @@
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 open! Stdune
 
 (** [Env.initial] extended with variables to force a few tools to print colors *)

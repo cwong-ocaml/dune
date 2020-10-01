@@ -1,4 +1,5 @@
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 open Import
 open Dune_file
 module Modules_group = Modules

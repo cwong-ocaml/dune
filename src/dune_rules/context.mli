@@ -1,5 +1,6 @@
 (** Compilation contexts *)
-open! Dune_engine
+open! Build_api
+open! Build_api.Transparent
 
 (** Dune supports two different kind of contexts:
 
